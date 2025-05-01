@@ -1,3 +1,0 @@
-# MLOps-AWS
-
-Holaaaa, holaaaa!
