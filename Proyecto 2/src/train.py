@@ -20,7 +20,7 @@ subprocess.run(["wget", url, "-O", output_file], check=True)
 
 
 # %%
-df = pd.read_excel('~/MateriasPrimasConsolidado.xlsx', sheet_name='MateriasPrimasConsolidado', header=0, index_col=0)
+df = pd.read_excel(output_file, sheet_name='MateriasPrimasConsolidado', header=0, index_col=0)
 df = df.dropna(axis=0, how='any')
 df = df.dropna(axis=1, how='any')
 df = df.drop(axis=1, labels=['Local_Timestamp','TimeStampDb','Partida','Solicitud','Valor_SP_Final','SP_Activo_Final','MateriaPrima','Equipo'])
