@@ -17,19 +17,19 @@ cd /home/ec2-user
 # Instalar uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Clonar el repositorio (si ya existe, no volver a clonar)
+# Clonar el repositorio si no existe
 if [ ! -d "udem" ]; then
     git clone https://github.com/velasquezjeisson/udem.git
 fi
 
-# Entrar a la carpeta del proyecto
-cd "udem/Proyecto 2"
+# Entrar a la carpeta src
+cd "udem/Proyecto 2/src"
 
-# Instalar dependencias desde pyproject.toml
+# Crear entorno virtual manualmente y sincronizar
+uv venv
 uv sync
 
-# Entrar a carpeta src y ejecutar el servidor FastAPI
-cd src
+# Lanzar FastAPI
 source .venv/bin/activate
 nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
 EOF
