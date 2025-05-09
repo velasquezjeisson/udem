@@ -6,6 +6,8 @@ import os
 import boto3
 import joblib
 import tempfile
+from typing import Optional
+
 
 app = FastAPI(title="Predicción multi-período con GradientBoostingRegressor")
 
@@ -19,7 +21,8 @@ s3_client = None
 
 # Input con solo el número de periodos
 class ForecastRequest(BaseModel):
-    n_periods: int  # cuántos pasos o días a predecir
+    n_periods: int
+    initial_values: Optional[list[float]] = None
 
 # Output con lista de predicciones
 class ForecastResponse(BaseModel):
@@ -43,18 +46,18 @@ async def predict(request: ForecastRequest):
         raise HTTPException(status_code=503, detail="Modelo no cargado")
 
     try:
-        n = request.n_periods
-        initial_value = 100.0  # Este valor inicial debería venir de datos reales si es posible
+        if request.initial_values is None:
+            current_input = np.array([100.0] * 10).reshape(1, -1)
+        elif len(request.initial_values) != 10:
+            raise HTTPException(status_code=400, detail="Se requieren exactamente 10 valores si se envían.")
+        else:
+            current_input = np.array(request.initial_values).reshape(1, -1)
 
-        # Crear input inicial con 10 retardos iguales
-        current_input = np.array([initial_value] * 10).reshape(1, -1)
         results = []
 
-        for _ in range(n):
+        for _ in range(request.n_periods):
             pred = model.predict(current_input)[0]
             results.append(float(pred))
-
-            # Mover los valores hacia la izquierda e insertar la nueva predicción al final
             current_input = np.roll(current_input, -1)
             current_input[0, -1] = pred
 
@@ -62,6 +65,7 @@ async def predict(request: ForecastRequest):
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en predicción: {e}")
+
 
 
 @app.get("/health")
