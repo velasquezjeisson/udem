@@ -3,17 +3,28 @@ import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 
+# Función para detectar la IP pública desde metadata EC2
+def get_ec2_public_ip():
+    try:
+        response = requests.get("http://169.254.169.254/latest/meta-data/public-ipv4", timeout=2)
+        if response.status_code == 200:
+            return response.text
+    except Exception:
+        pass
+    return "localhost"
+
+# Construcción dinámica de la URL de la API
+ip_address = get_ec2_public_ip()
+ip_api = f"http://{ip_address}:8000/predict"
+
 # Configuración de la app
 st.set_page_config(page_title="Predicción de Demanda", layout="centered")
 st.title("📈 Predicción con GradientBoostingRegressor")
 
-# Parámetros
-ip_api = "http://13.218.169.147:8000/predict"
-
 # Slider de periodos
 n = st.slider("Selecciona cuántos períodos quieres predecir", min_value=1, max_value=30, value=10)
 
-# Opcional: valores iniciales
+# Entrada de valores iniciales
 default_input = [100.0] * 10
 user_input = st.text_area("Valores iniciales (opcional, 10 valores separados por coma)", value=", ".join(map(str, default_input)))
 
@@ -26,7 +37,7 @@ except ValueError:
     st.error("Entrada inválida. Asegúrate de que todos los valores sean numéricos.")
     st.stop()
 
-# Botón de predicción
+# Botón para enviar la predicción
 if st.button("Predecir"):
     with st.spinner("Consultando modelo..."):
         response = requests.post(ip_api, json={
@@ -43,7 +54,6 @@ if st.button("Predecir"):
             st.write(preds)
 
             df = pd.DataFrame({"Periodo": list(range(1, n + 1)), "Valor": preds})
-
             st.line_chart(df.set_index("Periodo"))
         else:
-            st.error(f"X Error {response.status_code}: {response.json()['detail']}")
+            st.error(f"❌ Error {response.status_code}: {response.json()['detail']}")
