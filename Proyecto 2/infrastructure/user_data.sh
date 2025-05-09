@@ -20,7 +20,7 @@ cd /home/ec2-user
 git clone https://github.com/velasquezjeisson/udem.git
 
 # Entrar a la carpeta del proyecto
-cd "udem/Proyecto 2/src"
+cd "udem/Proyecto 2"
 
 # Instalar dependencias declaradas en pyproject.toml
 uv sync
