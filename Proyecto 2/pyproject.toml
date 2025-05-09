@@ -14,5 +14,3 @@ dependencies = [
     "pydantic"
 ]
 
-[tool.uv]
-virtualenvs.in-project = true
