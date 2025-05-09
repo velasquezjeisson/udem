@@ -41,5 +41,5 @@ nohup ../.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 > api.log 2>&1 &
 
 # Lanzar Streamlit (en otro puerto)
 cd /home/ec2-user/udem/Proyecto\ 2
-nohup ../.venv/bin/streamlit run app.py --server.port 8501 --server.headless true > streamlit.log 2>&1 &
+nohup .venv/bin/streamlit run app.py --server.port 8501 --server.headless true > streamlit.log 2>&1 &
 EOF

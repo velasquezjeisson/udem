@@ -8,7 +8,7 @@ st.set_page_config(page_title="Predicción de Demanda", layout="centered")
 st.title("📈 Predicción con GradientBoostingRegressor")
 
 # Parámetros
-ip_api = "http://<TU_IP_PUBLICA>:8000/predict"
+ip_api = "http://13.218.169:8000/predict"
 
 # Slider de periodos
 n = st.slider("Selecciona cuántos períodos quieres predecir", min_value=1, max_value=30, value=10)
