@@ -53,18 +53,25 @@ async def predict(request: ForecastRequest):
         else:
             current_input = np.array(request.initial_values).reshape(1, -1)
 
+        # Aplicar log1p al input para mantener la coherencia con el entrenamiento
+        current_input = np.log1p(current_input)
+
         results = []
 
         for _ in range(request.n_periods):
-            pred = model.predict(current_input)[0]
-            results.append(float(pred))
+            pred_log = model.predict(current_input)[0]
+            pred_real = float(np.expm1(pred_log))
+            results.append(pred_real)
+
+            # Shift y agregar la predicción (log1p) como nuevo input
             current_input = np.roll(current_input, -1)
-            current_input[0, -1] = pred
+            current_input[0, -1] = np.log1p(pred_real)
 
         return ForecastResponse(predictions=results)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en predicción: {e}")
+
 
 
 
