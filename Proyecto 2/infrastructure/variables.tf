@@ -27,6 +27,18 @@ variable "microservice_port" {
   default     = 8080
 }
 
+variable "streamlit_port" {
+  description = "The port the Streamlit app will listen on."
+  type        = number
+  default     = 8501
+}
+
+variable "instance_count" {
+  description = "The number of EC2 instances to create."
+  type        = number
+  default     = 1
+}
+
 variable "project_name" {
   description = "A name prefix for resources."
   type        = string

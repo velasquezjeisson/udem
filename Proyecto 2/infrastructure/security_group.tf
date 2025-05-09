@@ -16,7 +16,7 @@ resource "aws_security_group" "ec2_sg" {
     from_port        = var.streamlit_port
     to_port          = var.streamlit_port
     protocol         = "tcp"
-    cidr_blocks      = ["0.0.0./0"]
+    cidr_blocks      = ["0.0.0.0/0"]
   }
 
   ingress {
