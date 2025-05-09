@@ -44,21 +44,25 @@ async def predict(request: ForecastRequest):
 
     try:
         n = request.n_periods
-        # Este input inicial es ejemplo, normalmente deberías tener un último valor de entrada real
-        last_known_input = np.array([[100.0]])  # Cambiar por tu última entrada real
+        initial_value = 100.0  # Este valor inicial debería venir de datos reales si es posible
 
+        # Crear input inicial con 10 retardos iguales
+        current_input = np.array([initial_value] * 10).reshape(1, -1)
         results = []
-        current_input = last_known_input
 
         for _ in range(n):
             pred = model.predict(current_input)[0]
             results.append(float(pred))
-            current_input = np.array([[pred]])  # usar predicción como nuevo input
+
+            # Mover los valores hacia la izquierda e insertar la nueva predicción al final
+            current_input = np.roll(current_input, -1)
+            current_input[0, -1] = pred
 
         return ForecastResponse(predictions=results)
 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error en predicción: {e}")
+
 
 @app.get("/health")
 async def health():
