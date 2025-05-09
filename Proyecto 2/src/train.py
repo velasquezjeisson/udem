@@ -11,7 +11,8 @@ from sklearn.model_selection import train_test_split
 # CONEXION A BASE DE DATO
 
 # %%
-!wget -q https://github.com/velasquezjeisson/udem/raw/refs/heads/master/Proyecto%202/MateriasPrimasConsolidado.xlsx
+url = "https://github.com/velasquezjeisson/udem/raw/refs/heads/master/Proyecto%202/MateriasPrimasConsolidado.xlsx"
+output_file = "~/MateriasPrimasConsolidado.xlsx"
 
 # %%
 df = pd.read_excel('~/MateriasPrimasConsolidado.xlsx', sheet_name='MateriasPrimasConsolidado', header=0, index_col=0)
