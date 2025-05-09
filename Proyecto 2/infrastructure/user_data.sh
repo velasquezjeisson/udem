@@ -1,35 +1,40 @@
 #!/bin/bash
 
-# Guardar la salida del script en un archivo de log
+# Guardar salida en log
 exec > /var/log/user_data.log 2>&1
 set -x
 
-# Actualizar paquetes del sistema
+# Actualizar sistema e instalar git
 yum update -y
-
-# Instalar git (curl ya viene con Amazon Linux 2023)
 yum install -y git
 
-# Ejecutar todo como ec2-user
+# Ejecutar como ec2-user
 sudo -u ec2-user -i <<'EOF'
 cd /home/ec2-user
 
 # Instalar uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Clonar el repositorio si no existe
-if [ ! -d "udem" ]; then
-    git clone https://github.com/velasquezjeisson/udem.git
+# Clonar el repositorio o actualizarlo
+if [ -d "udem/.git" ]; then
+  cd udem
+  git fetch origin
+  git reset --hard origin/master
+else
+  git clone https://github.com/velasquezjeisson/udem.git
 fi
 
-# Entrar al proyecto raíz (donde está pyproject.toml)
-cd "udem/Proyecto 2"
+# Entrar al proyecto (donde está pyproject.toml)
+cd "/home/ec2-user/udem/Proyecto 2"
 
-# Crear y sincronizar entorno virtual
+# Crear entorno virtual y sincronizar dependencias
 uv venv
 uv sync
 
-# Entrar a src y lanzar el servidor usando el entorno del proyecto
+# Ejecutar entrenamiento
 cd src
+../.venv/bin/python train.py
+
+# Lanzar API con uvicorn
 nohup ../.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
 EOF
