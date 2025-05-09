@@ -11,6 +11,6 @@ yum install curl -y
 sudo -u ec2-user -i -- bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
 
 # Clone repository
-git clone https://github.com/sruap1214/terraform_example-src.git
-cd terraform_example-src/
+git clone https://github.com/velasquezjeisson/udem.git
+cd "Proyecto 2/src"
 uv sync
