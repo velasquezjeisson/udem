@@ -1,26 +1,27 @@
 #!/bin/bash
 
-# Guardar salida en log
+# Guardar la salida del script en un archivo de log
 exec > /var/log/user_data.log 2>&1
 set -x
 
-# Eliminar curl minimal si existe
-yum remove -y curl-minimal || true
+# Actualizar paquetes (opcional)
+yum update -y
 
-# Instalar dependencias necesarias
-yum install -y git curl unzip
+# Instalar solo git (curl ya viene con la AMI)
+yum install -y git
 
-# Instalar uv como ec2-user
-sudo -u ec2-user -i -- bash <<'EOF'
-cd /home/ec2-user
+# Ejecutar como ec2-user para que uv quede en su entorno
+sudo -u ec2-user -i <<'EOF'
+# Instalar uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clonar el repositorio
+cd /home/ec2-user
 git clone https://github.com/velasquezjeisson/udem.git
 
-# Entrar al proyecto
+# Entrar a la carpeta del proyecto
 cd "udem/Proyecto 2/src"
 
-# Sincronizar dependencias
+# Instalar dependencias declaradas en pyproject.toml
 uv sync
 EOF
