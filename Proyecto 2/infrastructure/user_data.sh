@@ -1,16 +1,16 @@
 #!/bin/bash
+exec > /var/log/user_data.log 2>&1
+set -x
+
 yum update -y
+yum install -y git curl
 
-# Install Git
-yum install git -y
+# Instalar uv para ec2-user
+sudo -u ec2-user -i <<'EOF'
+curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Install curl
-yum install curl -y
-
-# Install uv 
-sudo -u ec2-user -i -- bash -c 'curl -LsSf https://astral.sh/uv/install.sh | sh'
-
-# Clone repository
+cd /home/ec2-user
 git clone https://github.com/velasquezjeisson/udem.git
-cd "Proyecto 2/src"
+cd "udem/Proyecto 2/src"
 uv sync
+EOF

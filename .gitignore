@@ -1,2 +1,4 @@
 /Proyecto 2/infrastructure/.terraform/
 /Proyecto 2/conf.env
+/Proyecto 2/infrastructure/.terraform.lock.hcl
+/Proyecto 2/infrastructure/.terraform.tfstate.lock.info
