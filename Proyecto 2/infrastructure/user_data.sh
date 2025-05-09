@@ -7,10 +7,10 @@ set -x
 # Actualizar paquetes del sistema
 yum update -y
 
-# Instalar solo git (curl ya viene con la AMI de Amazon Linux 2023)
+# Instalar git (curl ya viene con Amazon Linux 2023)
 yum install -y git
 
-# Ejecutar como ec2-user todo lo necesario para entorno local
+# Ejecutar todo como ec2-user
 sudo -u ec2-user -i <<'EOF'
 cd /home/ec2-user
 
@@ -22,14 +22,14 @@ if [ ! -d "udem" ]; then
     git clone https://github.com/velasquezjeisson/udem.git
 fi
 
-# Entrar a la carpeta src
-cd "udem/Proyecto 2/src"
+# Entrar al proyecto raíz (donde está pyproject.toml)
+cd "udem/Proyecto 2"
 
-# Crear entorno virtual manualmente y sincronizar
+# Crear y sincronizar entorno virtual
 uv venv
 uv sync
 
-# Lanzar FastAPI
-source .venv/bin/activate
-nohup uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
+# Entrar a src y lanzar el servidor usando el entorno del proyecto
+cd src
+nohup ../.venv/bin/uvicorn main:app --host 0.0.0.0 --port 8000 > app.log 2>&1 &
 EOF
