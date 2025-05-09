@@ -11,8 +11,13 @@ from sklearn.model_selection import train_test_split
 # CONEXION A BASE DE DATO
 
 # %%
+import subprocess
+
 url = "https://github.com/velasquezjeisson/udem/raw/refs/heads/master/Proyecto%202/MateriasPrimasConsolidado.xlsx"
 output_file = "~/MateriasPrimasConsolidado.xlsx"
+
+subprocess.run(["wget", url, "-O", output_file], check=True)
+
 
 # %%
 df = pd.read_excel('~/MateriasPrimasConsolidado.xlsx', sheet_name='MateriasPrimasConsolidado', header=0, index_col=0)
