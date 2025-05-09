@@ -10,6 +10,14 @@ resource "aws_security_group" "ec2_sg" {
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
   }
+  
+  ingress {
+    description      = "Allow traffic to Streamlit port"
+    from_port        = var.streamlit_port
+    to_port          = var.streamlit_port
+    protocol         = "tcp"
+    cidr_blocks      = ["0.0.0./0"]
+  }
 
   ingress {
     description      = "Allow SSH access"
