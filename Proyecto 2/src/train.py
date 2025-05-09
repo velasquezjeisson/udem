@@ -6,16 +6,16 @@ import os
 import sys
 import sklearn
 from sklearn.model_selection import train_test_split
-
+from pathlib import Path
+import subprocess
 # %% [markdown]
 # CONEXION A BASE DE DATO
 
 # %%
-import subprocess
+
 
 url = "https://github.com/velasquezjeisson/udem/raw/refs/heads/master/Proyecto%202/MateriasPrimasConsolidado.xlsx"
-output_file = "~/MateriasPrimasConsolidado.xlsx"
-
+output_file = str(Path.home() / "MateriasPrimasConsolidado.xlsx")
 subprocess.run(["wget", url, "-O", output_file], check=True)
 
 
