@@ -6,6 +6,7 @@ requires-python = ">=3.9"
 
 dependencies = [
     "fastapi",
+    "uvicorn", 
     "uvicorn",
     "boto3",
     "joblib",
