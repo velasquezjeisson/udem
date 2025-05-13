@@ -2,8 +2,10 @@ resource "aws_lb" "api_lb" {
   name               = "${var.project_name}-alb"
   internal           = false
   load_balancer_type = "application"
-  subnets            = [aws_subnet.public.id]
-
+  subnets = [
+    aws_subnet.public_a.id,
+    aws_subnet.public_b.id
+    ]
   security_groups = [aws_security_group.ec2_sg.id]
 }
 
