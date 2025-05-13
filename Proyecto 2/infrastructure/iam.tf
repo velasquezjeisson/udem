@@ -13,7 +13,7 @@ resource "aws_iam_role" "ec2_s3_role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
-data "aws_iam_policy_document" "s3_access" {
+data "aws_iam_policy_document" "combined_policy" {
   statement {
     actions = [
       "s3:GetObject",
@@ -23,20 +23,27 @@ data "aws_iam_policy_document" "s3_access" {
     ]
     resources = [
       aws_s3_bucket.app_bucket.arn,
-      "${aws_s3_bucket.app_bucket.arn}/*",
+      "${aws_s3_bucket.app_bucket.arn}/*"
     ]
+  }
+
+  statement {
+    actions = [
+      "ec2:DescribeInstances"
+    ]
+    resources = ["*"]
   }
 }
 
-resource "aws_iam_policy" "s3_access_policy" {
-  name        = "${var.project_name}-s3-access-policy"
-  description = "Policy that allows read/write access to a specific S3 bucket"
-  policy      = data.aws_iam_policy_document.s3_access.json
+resource "aws_iam_policy" "combined_access_policy" {
+  name        = "${var.project_name}-ec2-s3-describe-policy"
+  description = "Policy for S3 access and EC2 DescribeInstances permission"
+  policy      = data.aws_iam_policy_document.combined_policy.json
 }
 
-resource "aws_iam_role_policy_attachment" "ec2_s3_attach" {
+resource "aws_iam_role_policy_attachment" "ec2_combined_attach" {
   role       = aws_iam_role.ec2_s3_role.name
-  policy_arn = aws_iam_policy.s3_access_policy.arn
+  policy_arn = aws_iam_policy.combined_access_policy.arn
 }
 
 resource "aws_iam_instance_profile" "ec2_profile" {
