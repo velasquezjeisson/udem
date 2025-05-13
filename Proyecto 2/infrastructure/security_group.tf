@@ -3,15 +3,6 @@ resource "aws_security_group" "ec2_sg" {
   description = "Allow inbound traffic for microservice and all outbound traffic"
   vpc_id      = aws_vpc.main.id
 
-
-  ingress {
-    from_port   = 8000
-    to_port     = 8000
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]  # o limita a IPs necesarias
-  }
-
-
   ingress {
     description      = "Allow traffic to microservice port"
     from_port        = var.microservice_port
@@ -19,7 +10,7 @@ resource "aws_security_group" "ec2_sg" {
     protocol         = "tcp"
     cidr_blocks      = ["0.0.0.0/0"]
   }
-  
+
   ingress {
     description      = "Allow traffic to Streamlit port"
     from_port        = var.streamlit_port
