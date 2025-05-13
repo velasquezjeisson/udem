@@ -1,11 +1,11 @@
 output "instance_public_ip" {
   description = "Public IP address of the EC2 instance."
-  value       = aws_instance.app_server.public_ip
+  value       = aws_instance.backend_servers.public_ip
 }
 
 output "instance_public_dns" {
   description = "Public DNS name of the EC2 instance."
-  value       = aws_instance.app_server.public_dns
+  value       = aws_instance.backend_servers.public_dns
 }
 
 output "s3_bucket_name" {
