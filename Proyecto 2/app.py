@@ -2,6 +2,7 @@ import streamlit as st
 import requests
 import pandas as pd
 import matplotlib.pyplot as plt
+import boto3
 
 # Función para detectar la IP pública desde metadata EC2
 def get_ec2_public_ip():
@@ -13,9 +14,36 @@ def get_ec2_public_ip():
         pass
     return "localhost"
 
+def get_backend_ip_from_tags():
+    try:
+        # Obtener credenciales temporales de la instancia EC2
+        session = boto3.Session()
+        ec2 = session.client("ec2", region_name="us-east-1")  # Ajusta región
+
+        # Obtener el ID de la propia instancia
+        instance_id = requests.get("http://169.254.169.254/latest/meta-data/instance-id", timeout=2).text
+
+        # Obtener información de la VPC
+        reservations = ec2.describe_instances(
+            Filters=[
+                {"Name": "tag:Name", "Values": ["*-backend"]}
+            ]
+        )
+
+        for reservation in reservations["Reservations"]:
+            for instance in reservation["Instances"]:
+                if instance["State"]["Name"] == "running":
+                    return instance["PublicIpAddress"]
+    except Exception as e:
+        print("Fallo detectando backend IP:", e)
+        return "localhost"
+
 # Construcción dinámica de la URL de la API
-ip_address = get_ec2_public_ip()
-ip_api = f"http://{ip_address}:8000/predict"
+#ip_address = get_ec2_public_ip()
+#ip_api = f"http://{ip_address}:8000/predict"
+
+ip_api = f"http://{get_backend_ip_from_tags()}:8000/predict"
+
 
 # Configuración de la app
 st.set_page_config(page_title="Predicción de Demanda", layout="centered")
