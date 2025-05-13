@@ -17,6 +17,7 @@ dependencies = [
     "matplotlib",
     "openpyxl",
     "python-dotenv",
-    "streamlit"
+    "streamlit",
+    "boto3"
 ]
 
