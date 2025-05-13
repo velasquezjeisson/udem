@@ -13,6 +13,7 @@ resource "aws_iam_role" "ec2_s3_role" {
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
+# 🔄 Política combinada: S3 + DescribeInstances + DescribeLoadBalancers
 data "aws_iam_policy_document" "combined_policy" {
   statement {
     actions = [
@@ -33,11 +34,18 @@ data "aws_iam_policy_document" "combined_policy" {
     ]
     resources = ["*"]
   }
+
+  statement {
+    actions = [
+      "elasticloadbalancing:DescribeLoadBalancers"
+    ]
+    resources = ["*"]
+  }
 }
 
 resource "aws_iam_policy" "combined_access_policy" {
-  name        = "${var.project_name}-ec2-s3-describe-policy"
-  description = "Policy for S3 access and EC2 DescribeInstances permission"
+  name        = "${var.project_name}-ec2-full-access-policy"
+  description = "Policy for S3, EC2 DescribeInstances, and ELB DescribeLoadBalancers"
   policy      = data.aws_iam_policy_document.combined_policy.json
 }
 

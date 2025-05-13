@@ -38,11 +38,28 @@ def get_backend_ip_from_tags():
         print("Fallo detectando backend IP:", e)
         return "localhost"
 
+def get_backend_lb_dns():
+    try:
+        session = boto3.Session()
+        elb = session.client("elbv2", region_name="us-east-1")  # Ajusta la región si es otra
+
+        lbs = elb.describe_load_balancers()
+
+        for lb in lbs["LoadBalancers"]:
+            if lb["LoadBalancerName"].endswith("-alb"):  # Ajusta si usas otro patrón
+                return lb["DNSName"]
+    except Exception as e:
+        print("Fallo detectando Load Balancer:", e)
+    return "localhost"
+
+
+
 # Construcción dinámica de la URL de la API
 #ip_address = get_ec2_public_ip()
 #ip_api = f"http://{ip_address}:8000/predict"
+#ip_api = f"http://{get_backend_ip_from_tags()}:8000/predict"
+ip_api = f"http://{get_backend_lb_dns()}:8000/predict"
 
-ip_api = f"http://{get_backend_ip_from_tags()}:8000/predict"
 
 
 # Configuración de la app
