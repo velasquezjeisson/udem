@@ -1,4 +1,4 @@
-resource "aws_instance" "app_server" {
+resource "aws_instance" "backend_servers" {
   count                     = 2  # cambia a cuántas instancias quieras
   ami                       = var.ami_id
   instance_type             = var.instance_type
