@@ -44,3 +44,9 @@ variable "project_name" {
   type        = string
   default     = "microservice-app"
 }
+
+variable "db_password" {
+  description = "Password for the SQL Server RDS instance"
+  type        = string
+  sensitive   = true
+}
