@@ -4,3 +4,4 @@
 /Proyecto 2/infrastructure/.terraform.tfstate.lock.info
 Proyecto 2/infrastructure/dev.tfvars
 /Proyecto 2/infrastructure/dev.tfvars
+*.tfvars
