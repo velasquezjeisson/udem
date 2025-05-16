@@ -13,7 +13,7 @@ import pyodbc
 import boto3
 
 # %%
-def get_db_credentials(secret_name="proyecto2/sqlserver", region="us-east-1"):
+def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1"):
     client = boto3.client("secretsmanager", region_name=region)
     secret = client.get_secret_value(SecretId=secret_name)
     return json.loads(secret["SecretString"])
