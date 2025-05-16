@@ -6,7 +6,6 @@ requires-python = ">=3.9"
 
 dependencies = [
     "fastapi",
-    "uvicorn", 
     "uvicorn",
     "boto3",
     "joblib",
@@ -18,7 +17,8 @@ dependencies = [
     "openpyxl",
     "python-dotenv",
     "streamlit",
-    "boto3",
-    "pyodbc"
+    "pyodbc",
+    "pytest",
+    "requests"
 ]
 
