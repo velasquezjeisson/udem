@@ -18,6 +18,7 @@ dependencies = [
     "openpyxl",
     "python-dotenv",
     "streamlit",
-    "boto3"
+    "boto3",
+    "pyodbc"
 ]
 
