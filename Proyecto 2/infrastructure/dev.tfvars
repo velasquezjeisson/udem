@@ -6,4 +6,5 @@ microservice_port=8000
 streamlit_port=8501
 project_name = "proyecto2-dev"
 db_password = "T3rr4f0rm3rT3st"
+
 #instance_count = 2
