@@ -13,14 +13,30 @@ import subprocess
 
 # %%
 
+import pyodbc
 
-url = "https://github.com/velasquezjeisson/udem/raw/refs/heads/master/Proyecto%202/MateriasPrimasConsolidado.xlsx"
-output_file = str(Path.home() / "MateriasPrimasConsolidado.xlsx")
-subprocess.run(["wget", url, "-O", output_file], check=True)
+# Parámetros de conexión
+server = "tu-endpoint-rds"  # sin "https://" ni puerto
+database = "proyectodb"
+username = "adminuser"
+password = "StrongPassword123!"
 
+# Conexión a RDS SQL Server
+conn = pyodbc.connect(
+    f"DRIVER={{ODBC Driver 17 for SQL Server}};"
+    f"SERVER={server},1433;"
+    f"DATABASE={database};"
+    f"UID={username};"
+    f"PWD={password}"
+)
 
-# %%
-df = pd.read_excel(output_file, sheet_name='MateriasPrimasConsolidado', header=0, index_col=0)
+# Consulta SQL (ajústala a tu tabla real)
+query = "SELECT * FROM materias_primas"
+df = pd.read_sql(query, conn)
+
+# Cierre de conexión
+conn.close()
+
 df = df.dropna(axis=0, how='any')
 df = df.dropna(axis=1, how='any')
 df = df.drop(axis=1, labels=['Local_Timestamp','TimeStampDb','Partida','Solicitud','Valor_SP_Final','SP_Activo_Final','MateriaPrima','Equipo'])
