@@ -8,7 +8,7 @@ resource "aws_db_instance" "sqlserver" {
   storage_type            = "gp2"
   username                = "adminuser"
   password                = var.db_password
-  db_name                 = "proyectodb"
+  #db_name                 = "proyectodb"
   publicly_accessible     = true
   skip_final_snapshot     = true
   vpc_security_group_ids  = [aws_security_group.ec2_sg.id]

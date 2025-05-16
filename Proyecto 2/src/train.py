@@ -9,54 +9,49 @@ from sklearn.model_selection import train_test_split
 from pathlib import Path
 import subprocess
 import json
-
-# %% [markdown]
-# CONEXION A BASE DE DATO
+import pyodbc
+import boto3
 
 # %%
-
-import pyodbc
-
-
 def get_db_credentials(secret_name="proyecto2/sqlserver", region="us-east-1"):
     client = boto3.client("secretsmanager", region_name=region)
     secret = client.get_secret_value(SecretId=secret_name)
     return json.loads(secret["SecretString"])
 
+# --- Cargar credenciales desde Secrets Manager ---
 creds = get_db_credentials()
 DB_USER = creds["username"]
 DB_PASSWORD = creds["password"]
+DB_INSTANCE_IDENTIFIER = "proyecto2-dev-rds-sqlserver"  # 👈 tu identificador real
+DB_NAME = "proyectodb"
+REGION = "us-east-1"
 
-# Parámetros de conexión
-server = "tu-endpoint-rds"  # sin "https://" ni puerto
-database = "proyectodb"
-username = DB_USER
-password = DB_PASSWORD
+# --- Obtener endpoint RDS dinámicamente ---
+rds = boto3.client('rds', region_name=REGION)
+response = rds.describe_db_instances(DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER)
+endpoint = response['DBInstances'][0]['Endpoint']['Address']
 
-# Conexión a RDS SQL Server
+# Conexión a la base de datos
 conn = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
-    f"SERVER={server},1433;"
-    f"DATABASE={database};"
-    f"UID={username};"
-    f"PWD={password}"
+    f"SERVER={endpoint},1433;"
+    f"DATABASE={DB_NAME};"
+    f"UID={DB_USER};"
+    f"PWD={DB_PASSWORD}"
 )
-
-# Consulta SQL (ajústala a tu tabla real)
 query = "SELECT * FROM materias_primas"
 df = pd.read_sql(query, conn)
-
-# Cierre de conexión
 conn.close()
 
+# %%
 df = df.dropna(axis=0, how='any')
 df = df.dropna(axis=1, how='any')
-df = df.drop(axis=1, labels=['Local_Timestamp','TimeStampDb','Partida','Solicitud','Valor_SP_Final','SP_Activo_Final','MateriaPrima','Equipo'])
+df = df.drop(axis=1, labels=[
+    'Local_Timestamp','TimeStampDb','Partida','Solicitud',
+    'Valor_SP_Final','SP_Activo_Final','MateriaPrima','Equipo'
+])
 df['Time_Stamp'] = pd.to_datetime(df['Time_Stamp'], dayfirst=True)
 df.set_index('Time_Stamp', inplace=True)
-
-
-df.head()
 
 # %%
 df_diario = df.resample('D').sum()
@@ -72,7 +67,6 @@ for i in range(1, retardo+1):
     df_filtrado['PV_Final-'+str(i)] = df_filtrado['PV_Final'].shift(i)
 df_filtrado.dropna(inplace=True)
 
-
 # %%
 X = df_filtrado.drop('PV_Final', axis=1)
 y = df_filtrado['PV_Final']
@@ -82,29 +76,20 @@ y_train = y.iloc[:-30]
 y_test = y.iloc[-30:]
 
 # %%
-import numpy as np
-
 y_train_log = np.log1p(y_train)
 y_test_log = np.log1p(y_test)
 X_train_log = np.log1p(X_train)
 X_test_log = np.log1p(X_test)
 
-
 # %%
-from sklearn.metrics import mean_absolute_percentage_error
-
-from sklearn.metrics import make_scorer
-
+from sklearn.metrics import mean_absolute_percentage_error, make_scorer
 
 mape_scorer = make_scorer(mean_absolute_percentage_error, greater_is_better=False)
-
 
 # %%
 from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.model_selection import RandomizedSearchCV
-from sklearn.metrics import mean_absolute_percentage_error
 
-# Hiperparámetros para Gradient Boosting
 param_distributions_gb = {
     'n_estimators': [100, 200, 300],
     'learning_rate': [0.01, 0.05, 0.1],
@@ -114,14 +99,12 @@ param_distributions_gb = {
     'subsample': [0.7, 0.8, 1.0]
 }
 
-# Modelo base
 gb = GradientBoostingRegressor(random_state=42)
 
-# Búsqueda aleatoria con validación cruzada y MAPE
 model_gb = RandomizedSearchCV(
     estimator=gb,
     param_distributions=param_distributions_gb,
-    n_iter=30,  # puedes ajustar según el tiempo disponible
+    n_iter=30,
     scoring=mape_scorer,
     cv=5,
     n_jobs=-1,
@@ -129,53 +112,32 @@ model_gb = RandomizedSearchCV(
     verbose=1
 )
 
-# Entrenar con la variable logarítmica
 model_gb.fit(X_train_log, y_train_log)
 
-# Mostrar resultados
 print("Mejores parámetros:", model_gb.best_params_)
 print(f"Score de validación cruzada (MAPE): {-model_gb.best_score_:.2f}%")
 print(f"Score de entrenamiento (MAPE): {-model_gb.score(X_train_log, y_train_log):.2f}%")
 print(f"Score de prueba (MAPE): {-model_gb.score(X_test_log, y_test_log):.2f}%")
 
-# Predicción y evaluación en escala original
 y_pred_gb_log = model_gb.predict(X_test_log)
 y_pred_gb = np.expm1(y_pred_gb_log)
-
-# MAPE real en escala original
 mape_test_gb = mean_absolute_percentage_error(np.expm1(y_test_log), y_pred_gb)
 print(f"MAPE real en prueba (escala original): {mape_test_gb * 100:.2f}%")
 
-
 # %%
 import joblib
-
-# Guardar el mejor modelo encontrado en el RandomizedSearchCV
 joblib.dump(model_gb.best_estimator_, "modelo_gb.pkl")
-# Cargar el modelo guardado
 
 # %%
-import boto3
 from dotenv import load_dotenv
-
-
 load_dotenv(dotenv_path='conf.env')
 
-# Obtener las credenciales de las variables de entorno
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 
-# Inicializar cliente de S3
 s3 = boto3.client('s3')
-
-# Datos de tu bucket y nombre del archivo
 bucket_name = 'udem-proyecto2'
 s3_path = 'modelos/modelo_gb.pkl'
 
-# Subida a S3
 s3.upload_file('modelo_gb.pkl', bucket_name, s3_path)
-
-print(f"Modelo subido a s3://{bucket_name}/{s3_path}")
-
-
-
+print(f"📤 Modelo subido a s3://{bucket_name}/{s3_path}")
