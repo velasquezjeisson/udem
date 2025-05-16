@@ -21,7 +21,10 @@ resource "aws_db_instance" "sqlserver" {
 
 resource "aws_db_subnet_group" "main" {
   name       = "${var.project_name}-subnet-group"
-  subnet_ids = [aws_subnet.public.id]
+  subnet_ids = [
+  aws_subnet.public_a.id,
+  aws_subnet.public_b.id
+  ]
 
   tags = {
     Name = "${var.project_name}-subnet-group"

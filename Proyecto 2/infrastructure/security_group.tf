@@ -38,3 +38,14 @@ resource "aws_security_group" "ec2_sg" {
     Name = "${var.project_name}-ec2-sg"
   }
 }
+
+resource "aws_security_group_rule" "allow_sqlserver_internal" {
+  type                     = "ingress"
+  from_port                = 1433
+  to_port                  = 1433
+  protocol                 = "tcp"
+  security_group_id        = aws_security_group.ec2_sg.id
+  source_security_group_id = aws_security_group.ec2_sg.id
+
+  description = "Allow SQL Server access within EC2 instances using the same SG"
+}
