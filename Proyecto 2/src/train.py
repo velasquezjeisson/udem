@@ -8,6 +8,8 @@ import sklearn
 from sklearn.model_selection import train_test_split
 from pathlib import Path
 import subprocess
+import json
+
 # %% [markdown]
 # CONEXION A BASE DE DATO
 
@@ -15,11 +17,21 @@ import subprocess
 
 import pyodbc
 
+
+def get_db_credentials(secret_name="proyecto2/sqlserver", region="us-east-1"):
+    client = boto3.client("secretsmanager", region_name=region)
+    secret = client.get_secret_value(SecretId=secret_name)
+    return json.loads(secret["SecretString"])
+
+creds = get_db_credentials()
+DB_USER = creds["username"]
+DB_PASSWORD = creds["password"]
+
 # Parámetros de conexión
 server = "tu-endpoint-rds"  # sin "https://" ni puerto
 database = "proyectodb"
-username = "adminuser"
-password = "StrongPassword123!"
+username = DB_USER
+password = DB_PASSWORD
 
 # Conexión a RDS SQL Server
 conn = pyodbc.connect(

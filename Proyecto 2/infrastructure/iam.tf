@@ -58,3 +58,21 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   name = "${var.project_name}-ec2-profile-2"
   role = aws_iam_role.ec2_s3_role.name
 }
+
+resource "aws_iam_role_policy" "allow_read_sql_secret" {
+  name = "AllowReadSqlSecret"
+  role = aws_iam_role.ec2_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "secretsmanager:GetSecretValue"
+        ],
+        Resource = aws_secretsmanager_secret.sql_credentials.arn
+      }
+    ]
+  })
+}

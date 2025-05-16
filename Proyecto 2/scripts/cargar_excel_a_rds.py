@@ -4,12 +4,20 @@ import requests
 import io
 import boto3
 import os
+import json
 
+
+def get_db_credentials(secret_name="proyecto2/sqlserver", region="us-east-1"):
+    client = boto3.client("secretsmanager", region_name=region)
+    secret = client.get_secret_value(SecretId=secret_name)
+    return json.loads(secret["SecretString"])
+
+creds = get_db_credentials()
+DB_USER = creds["username"]
+DB_PASSWORD = creds["password"]
 # --- CONFIGURACIONES ---
 DB_INSTANCE_IDENTIFIER = "tu-nombre-rds"  # <--- reemplaza con tu identificador de RDS
 DB_NAME = "proyectodb"
-DB_USER = "adminuser"
-DB_PASSWORD = "StrongPassword123!"  # considera usar variables de entorno para seguridad
 REGION = "us-east-1"  # ajusta según tu región
 
 # --- OBTENER ENDPOINT DE RDS ---
