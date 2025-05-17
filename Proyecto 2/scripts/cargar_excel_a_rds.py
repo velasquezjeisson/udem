@@ -16,13 +16,12 @@ def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1")
 creds = get_db_credentials()
 DB_USER = creds["username"]
 DB_PASSWORD = creds["password"]
-DB_INSTANCE_IDENTIFIER = "proyecto2-dev-rds-sqlserver"  # 👈 tu identificador real
 DB_NAME = "proyectodb"
 REGION = "us-east-1"
 
-# --- Obtener el endpoint dinámicamente ---
+# --- Obtener endpoint de la primera instancia RDS disponible ---
 rds = boto3.client('rds', region_name=REGION)
-response = rds.describe_db_instances(DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER)
+response = rds.describe_db_instances()
 endpoint = response['DBInstances'][0]['Endpoint']['Address']
 
 print(f"✅ Endpoint de RDS obtenido: {endpoint}")
@@ -37,7 +36,6 @@ conn_master = pyodbc.connect(
 )
 cursor_master = conn_master.cursor()
 
-# Crear la base de datos si no existe
 cursor_master.execute(f"""
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '{DB_NAME}')
 BEGIN
@@ -57,7 +55,7 @@ if response.status_code != 200:
 
 df = pd.read_excel(io.BytesIO(response.content))
 
-# --- Conectarse ahora a la base de datos creada ---
+# --- Conectarse a la base de datos creada ---
 conn = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
     f"SERVER={endpoint},1433;"

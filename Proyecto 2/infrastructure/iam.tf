@@ -22,12 +22,10 @@ data "aws_iam_policy_document" "combined_policy" {
       "s3:GetObject",
       "s3:PutObject",
       "s3:DeleteObject",
-      "s3:ListBucket"
+      "s3:ListBucket",
+      "rds:DescribeDBInstances"
     ]
-    resources = [
-      aws_s3_bucket.app_bucket.arn,
-      "${aws_s3_bucket.app_bucket.arn}/*"
-    ]
+     resources = ["*"]
   }
 
   statement {
