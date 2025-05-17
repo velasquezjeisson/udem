@@ -42,13 +42,9 @@ sudo ACCEPT_EULA=Y yum install -y msodbcsql17
 # Activar entorno virtual
 source .venv/bin/activate
 
-# Instalar paquetes Python
-pip install pandas pyodbc requests
 
 # Ejecutar script de carga de Excel a RDS
 python /home/ec2-user/udem/Proyecto\ 2/scripts/cargar_excel_a_rds.py
-
-
 
 
 # Ejecutar entrenamiento
