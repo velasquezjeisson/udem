@@ -4,6 +4,8 @@ from pydantic import BaseModel
 import numpy as np
 import os
 import boto3
+os.environ["AWS_DEFAULT_REGION"] = "us-east-1"
+
 import joblib
 import tempfile
 from typing import Optional
@@ -13,6 +15,7 @@ import watchtower
 # CloudWatch logger setup
 log_group = os.environ.get("CLOUDWATCH_LOG_GROUP", "FastAPI-Predictions")
 log_stream = os.environ.get("CLOUDWATCH_LOG_STREAM", "predictions")
+
 
 logger = logging.getLogger("fastapi.cloudwatch")
 logger.setLevel(logging.INFO)
