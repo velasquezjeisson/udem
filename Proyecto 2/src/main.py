@@ -12,23 +12,22 @@ from typing import Optional
 import logging
 import watchtower
 
-# CloudWatch logger setup
+# --- CloudWatch Logger Setup ---
 log_group = os.environ.get("CLOUDWATCH_LOG_GROUP", "FastAPI-Predictions")
 log_stream = os.environ.get("CLOUDWATCH_LOG_STREAM", "predictions")
 
-
 logger = logging.getLogger("fastapi.cloudwatch")
 logger.setLevel(logging.INFO)
-watchtower.CloudWatchLogHandler(
+logger.addHandler(watchtower.CloudWatchLogHandler(
     log_group=log_group,
     stream_name=log_stream
-)
+))
+logger.info("✅ Logger CloudWatch inicializado correctamente")
 
-
-
+# --- FastAPI App ---
 app = FastAPI(title="Predicción multi-período con GradientBoostingRegressor")
 
-# Parámetros del modelo en S3
+# --- Parámetros del modelo en S3 ---
 S3_BUCKET_NAME = os.environ.get("S3_MODEL_BUCKET", "udem-proyecto2")
 S3_MODEL_KEY = os.environ.get("S3_MODEL_KEY", "modelos/modelo_gb.pkl")
 LOCAL_MODEL_PATH = os.path.join(tempfile.gettempdir(), "modelo_gb.pkl")
@@ -36,6 +35,7 @@ LOCAL_MODEL_PATH = os.path.join(tempfile.gettempdir(), "modelo_gb.pkl")
 model = None
 s3_client = None
 
+# --- Schemas ---
 class ForecastRequest(BaseModel):
     n_periods: int
     initial_values: Optional[list[float]] = None
@@ -43,6 +43,7 @@ class ForecastRequest(BaseModel):
 class ForecastResponse(BaseModel):
     predictions: list[float]
 
+# --- Cargar modelo al iniciar ---
 @app.on_event("startup")
 async def load_model():
     global model, s3_client
@@ -57,6 +58,7 @@ async def load_model():
         logger.error(f"❌ Error cargando el modelo desde S3: {e}")
         model = None
 
+# --- Endpoint de predicción ---
 @app.post("/predict", response_model=ForecastResponse)
 async def predict(request: ForecastRequest):
     if model is None:
@@ -99,9 +101,11 @@ async def predict(request: ForecastRequest):
         logger.exception(f"❌ Error en predicción: {e}")
         raise HTTPException(status_code=500, detail=f"Error en predicción: {e}")
 
+# --- Endpoint de salud ---
 @app.get("/health")
 async def health():
     return {"status": "ok", "model_loaded": model is not None}
 
+# --- Uvicorn runner ---
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
