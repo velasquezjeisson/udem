@@ -3,34 +3,43 @@ resource "aws_security_group" "ec2_sg" {
   description = "Allow inbound traffic to EC2 and RDS"
   vpc_id      = aws_vpc.main.id
 
-  # Permite tráfico HTTP para FastAPI
+  # Microservicio FastAPI
   ingress {
-    description      = "Allow traffic to microservice port"
-    from_port        = var.microservice_port
-    to_port          = var.microservice_port
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Allow traffic to microservice port"
+    from_port   = var.microservice_port
+    to_port     = var.microservice_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Permite acceso a Streamlit
+  # Streamlit
   ingress {
-    description      = "Allow traffic to Streamlit port"
-    from_port        = var.streamlit_port
-    to_port          = var.streamlit_port
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Allow traffic to Streamlit port"
+    from_port   = var.streamlit_port
+    to_port     = var.streamlit_port
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Permite SSH desde cualquier lugar (limitar en producción)
+  # SSH
   ingress {
-    description      = "Allow SSH access"
-    from_port        = 22
-    to_port          = 22
-    protocol         = "tcp"
-    cidr_blocks      = ["0.0.0.0/0"]
+    description = "Allow SSH access"
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"] # ¡Restringe en producción!
   }
 
-  # Salida total permitida
+  # SQL Server entre recursos con el mismo SG
+  ingress {
+    description              = "Allow SQL Server access between EC2s and RDS"
+    from_port                = 1433
+    to_port                  = 1433
+    protocol                 = "tcp"
+    self                     = true
+  }
+
+  # Salida total
   egress {
     from_port   = 0
     to_port     = 0
@@ -41,15 +50,4 @@ resource "aws_security_group" "ec2_sg" {
   tags = {
     Name = "${var.project_name}-ec2-sg"
   }
-}
-
-# Regla explícita para permitir tráfico al puerto 1433 entre instancias con el mismo SG
-resource "aws_security_group_rule" "allow_sqlserver_internal" {
-  type                     = "ingress"
-  from_port                = 1433
-  to_port                  = 1433
-  protocol                 = "tcp"
-  security_group_id        = aws_security_group.ec2_sg.id
-  source_security_group_id = aws_security_group.ec2_sg.id
-  description              = "Allow SQL Server access within EC2s using same SG"
 }
