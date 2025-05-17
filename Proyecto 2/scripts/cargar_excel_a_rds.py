@@ -34,6 +34,8 @@ conn_master = pyodbc.connect(
     f"UID={DB_USER};"
     f"PWD={DB_PASSWORD}"
 )
+conn_master.autocommit = True
+
 cursor_master = conn_master.cursor()
 
 cursor_master.execute(f"""
