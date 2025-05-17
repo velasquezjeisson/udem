@@ -71,18 +71,33 @@ cursor = conn.cursor()
 cursor.execute("""
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='materias_primas' AND xtype='U')
 CREATE TABLE materias_primas (
-    Time_Stamp DATETIME,
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    Partida NVARCHAR(50),
+    Solicitud NVARCHAR(50),
+    SP_Activo_Final FLOAT,
+    Valor_SP_Final FLOAT,
     PV_Final FLOAT,
-    PRIMARY KEY (Time_Stamp)
+    MateriaPrima NVARCHAR(100),
+    Equipo NVARCHAR(100),
+    Local_Timestamp DATETIME,
+    Time_Stamp DATETIME,
+    TimeStampDb DATETIME
 )
 """)
 
-# Insertar los datos
 for _, row in df.iterrows():
     cursor.execute("""
-        INSERT INTO materias_primas (Time_Stamp, PV_Final)
-        VALUES (?, ?)
-    """, row["Time_Stamp"], row["PV_Final"])
+        INSERT INTO materias_primas (
+            Partida, Solicitud, SP_Activo_Final, Valor_SP_Final,
+            PV_Final, MateriaPrima, Equipo, Local_Timestamp,
+            Time_Stamp, TimeStampDb
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, 
+    row["Partida"], row["Solicitud"], row["SP_Activo_Final"], row["Valor_SP_Final"],
+    row["PV_Final"], row["MateriaPrima"], row["Equipo"],
+    row["Local_Timestamp"], row["Time_Stamp"], row["TimeStampDb"])
+
 
 conn.commit()
 cursor.close()
