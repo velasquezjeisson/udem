@@ -1,11 +1,8 @@
 import pandas as pd
 import pyodbc
-import requests
-import io
 import boto3
 import os
 import json
-
 
 def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1"):
     client = boto3.client("secretsmanager", region_name=region)
@@ -35,7 +32,6 @@ conn_master = pyodbc.connect(
     f"PWD={DB_PASSWORD}"
 )
 conn_master.autocommit = True
-
 cursor_master = conn_master.cursor()
 
 cursor_master.execute(f"""
@@ -44,18 +40,13 @@ BEGIN
     CREATE DATABASE {DB_NAME};
 END
 """)
-conn_master.commit()
 cursor_master.close()
 conn_master.close()
 print(f"✅ Base de datos '{DB_NAME}' verificada o creada.")
 
-# --- Descargar y leer el Excel ---
-url = "https://github.com/velasquezjeisson/udem/raw/refs/heads/master/Proyecto%202/MateriasPrimasConsolidado.xlsx"
-response = requests.get(url)
-if response.status_code != 200:
-    raise Exception(f"Error al descargar el archivo: {response.status_code}")
-
-df = pd.read_excel(io.BytesIO(response.content))
+# --- Leer el Excel directamente desde el proyecto local ---
+excel_path = "/home/ec2-user/udem/Proyecto 2/MateriasPrimasConsolidado.xlsx"
+df = pd.read_excel(excel_path)
 
 # --- Conectarse a la base de datos creada ---
 conn = pyodbc.connect(
@@ -67,19 +58,19 @@ conn = pyodbc.connect(
 )
 cursor = conn.cursor()
 
+# Eliminar tabla si existe
 cursor.execute("""
 IF OBJECT_ID('materias_primas', 'U') IS NOT NULL
 DROP TABLE materias_primas;
 """)
 
-# Crear tabla si no existe
+# Crear tabla con el modelo correcto
 cursor.execute("""
-IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='materias_primas' AND xtype='U')
 CREATE TABLE materias_primas (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     Partida NVARCHAR(50),
     Solicitud NVARCHAR(50),
-    SP_Activo_Final FLOAT,
+    SP_Activo_Final NVARCHAR(100),
     Valor_SP_Final FLOAT,
     PV_Final FLOAT,
     MateriaPrima NVARCHAR(100),
@@ -90,6 +81,7 @@ CREATE TABLE materias_primas (
 )
 """)
 
+# Insertar datos de Excel
 for _, row in df.iterrows():
     cursor.execute("""
         INSERT INTO materias_primas (
@@ -101,7 +93,7 @@ for _, row in df.iterrows():
     """,
     row["Partida"],
     row["Solicitud"],
-    row["SP_Activo_Final"] if pd.notna(row["SP_Activo_Final"]) else None
+    row["SP_Activo_Final"] if pd.notna(row["SP_Activo_Final"]) else None,
     float(row["Valor_SP_Final"]) if pd.notna(row["Valor_SP_Final"]) else None,
     float(row["PV_Final"]) if pd.notna(row["PV_Final"]) else None,
     row["MateriaPrima"],
@@ -109,8 +101,6 @@ for _, row in df.iterrows():
     row["Local_Timestamp"],
     row["Time_Stamp"],
     row["TimeStampDb"])
-
-
 
 conn.commit()
 cursor.close()
