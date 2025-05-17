@@ -22,13 +22,12 @@ def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1")
 creds = get_db_credentials()
 DB_USER = creds["username"]
 DB_PASSWORD = creds["password"]
-DB_INSTANCE_IDENTIFIER = "proyecto2-dev-rds-sqlserver"  # 👈 tu identificador real
 DB_NAME = "proyectodb"
 REGION = "us-east-1"
 
 # --- Obtener endpoint RDS dinámicamente ---
 rds = boto3.client('rds', region_name=REGION)
-response = rds.describe_db_instances(DBInstanceIdentifier=DB_INSTANCE_IDENTIFIER)
+response = rds.describe_db_instances()
 endpoint = response['DBInstances'][0]['Endpoint']['Address']
 
 # Conexión a la base de datos
