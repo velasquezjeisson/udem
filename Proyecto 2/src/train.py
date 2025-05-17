@@ -24,14 +24,11 @@ log_stream = os.environ.get("CLOUDWATCH_LOG_STREAM", "training")
 
 logger = logging.getLogger("train.cloudwatch")
 logger.setLevel(logging.INFO)
-watchtower.CloudWatchLogHandler(
+logger.addHandler(watchtower.CloudWatchLogHandler(  # ✅ Esta línea es clave
     log_group=log_group,
     stream_name=log_stream
-)
+))
 logger.info("✅ Logger CloudWatch inicializado correctamente")
-
-
-
 
 # %%
 def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1"):
@@ -40,19 +37,16 @@ def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1")
     return json.loads(secret["SecretString"])
 
 try:
-    # --- Cargar credenciales desde Secrets Manager ---
     creds = get_db_credentials()
     DB_USER = creds["username"]
     DB_PASSWORD = creds["password"]
     DB_NAME = "proyectodb"
     REGION = "us-east-1"
 
-    # --- Obtener endpoint RDS dinámicamente ---
     rds = boto3.client('rds', region_name=REGION)
     response = rds.describe_db_instances()
     endpoint = response['DBInstances'][0]['Endpoint']['Address']
 
-    # --- Leer desde RDS ---
     conn = pyodbc.connect(
         f"DRIVER={{ODBC Driver 17 for SQL Server}};"
         f"SERVER={endpoint},1433;"
@@ -60,8 +54,7 @@ try:
         f"UID={DB_USER};"
         f"PWD={DB_PASSWORD}"
     )
-    query = "SELECT * FROM materias_primas"
-    df = pd.read_sql(query, conn)
+    df = pd.read_sql("SELECT * FROM materias_primas", conn)
     conn.close()
 
     df = df.dropna(axis=0, how='any')
@@ -73,7 +66,6 @@ try:
     df['Time_Stamp'] = pd.to_datetime(df['Time_Stamp'], dayfirst=True)
     df.set_index('Time_Stamp', inplace=True)
 
-    # --- Preprocesamiento y features ---
     df_diario = df.resample('D').sum()
     df_filtrado = df_diario[df_diario["PV_Final"] > 0][["PV_Final"]]
 
@@ -131,7 +123,6 @@ try:
     y_pred_gb = np.expm1(y_pred_gb_log)
     mape_test_gb = mean_absolute_percentage_error(np.expm1(y_test_log), y_pred_gb)
 
-    # 🔍 Logging en CloudWatch
     logger.info({
         "event": "training_completed",
         "best_params": model_gb.best_params_,
@@ -141,10 +132,8 @@ try:
         "mape_real": float(mape_test_gb)
     })
 
-    # Guardar modelo
     joblib.dump(best_model, "modelo_gb.pkl")
 
-    # Subir modelo a S3
     load_dotenv(dotenv_path='conf.env')
     s3 = boto3.client('s3')
     bucket_name = 'udem-proyecto2'
