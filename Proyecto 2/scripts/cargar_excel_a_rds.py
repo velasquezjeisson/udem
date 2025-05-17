@@ -67,6 +67,11 @@ conn = pyodbc.connect(
 )
 cursor = conn.cursor()
 
+cursor.execute("""
+IF OBJECT_ID('materias_primas', 'U') IS NOT NULL
+DROP TABLE materias_primas;
+""")
+
 # Crear tabla si no existe
 cursor.execute("""
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='materias_primas' AND xtype='U')
