@@ -9,11 +9,15 @@ def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1")
     secret = client.get_secret_value(SecretId=secret_name)
     return json.loads(secret["SecretString"])
 
+def safe_str(value):
+    return str(value) if pd.notna(value) else None
+
 def safe_float(value):
     try:
         return float(value)
     except (ValueError, TypeError):
         return None
+
 
 # --- Cargar credenciales desde Secrets Manager ---
 creds = get_db_credentials()
@@ -96,16 +100,17 @@ for _, row in df.iterrows():
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
-    row["Partida"],
-    row["Solicitud"],
-    row["SP_Activo_Final"] if pd.notna(row["SP_Activo_Final"]) else None,
+    safe_str(row["Partida"]),
+    safe_str(row["Solicitud"]),
+    safe_str(row["SP_Activo_Final"]),
     safe_float(row["Valor_SP_Final"]),
     safe_float(row["PV_Final"]),
-    row["MateriaPrima"],
-    row["Equipo"],
-    row["Local_Timestamp"],
-    row["Time_Stamp"],
-    row["TimeStampDb"])
+    safe_str(row["MateriaPrima"]),
+    safe_str(row["Equipo"]),
+    row["Local_Timestamp"] if pd.notna(row["Local_Timestamp"]) else None,
+    row["Time_Stamp"] if pd.notna(row["Time_Stamp"]) else None,
+    row["TimeStampDb"] if pd.notna(row["TimeStampDb"]) else None)
+
 
 conn.commit()
 cursor.close()
