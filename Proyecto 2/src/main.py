@@ -16,11 +16,11 @@ log_stream = os.environ.get("CLOUDWATCH_LOG_STREAM", "predictions")
 
 logger = logging.getLogger("fastapi.cloudwatch")
 logger.setLevel(logging.INFO)
-logger.addHandler(watchtower.CloudWatchLogHandler(
+watchtower.CloudWatchLogHandler(
     log_group=log_group,
-    stream_name=log_stream,
-    boto3_session=boto3.Session()
-))
+    stream_name=log_stream
+)
+
 
 app = FastAPI(title="Predicción multi-período con GradientBoostingRegressor")
 

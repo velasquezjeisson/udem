@@ -22,11 +22,11 @@ log_stream = os.environ.get("CLOUDWATCH_LOG_STREAM", "training")
 
 logger = logging.getLogger("train.cloudwatch")
 logger.setLevel(logging.INFO)
-logger.addHandler(watchtower.CloudWatchLogHandler(
+watchtower.CloudWatchLogHandler(
     log_group=log_group,
-    stream_name=log_stream,
-    boto3_session=boto3.Session()
-))
+    stream_name=log_stream
+)
+
 
 # %%
 def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1"):
