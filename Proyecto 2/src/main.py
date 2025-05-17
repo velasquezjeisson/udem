@@ -18,8 +18,7 @@ logger = logging.getLogger("fastapi.cloudwatch")
 logger.setLevel(logging.INFO)
 watchtower.CloudWatchLogHandler(
     log_group=log_group,
-    stream_name=log_stream,
-    region_name="us-east-1"
+    stream_name=log_stream
 )
 
 
