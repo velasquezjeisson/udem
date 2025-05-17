@@ -18,7 +18,6 @@ def safe_float(value):
     except (ValueError, TypeError):
         return None
 
-
 # --- Cargar credenciales desde Secrets Manager ---
 creds = get_db_credentials()
 DB_USER = creds["username"]
@@ -67,9 +66,7 @@ conn = pyodbc.connect(
 )
 cursor = conn.cursor()
 
-
-
-# Crear tabla con estructura completa
+# Crear tabla si no existe
 cursor.execute("""
 IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='materias_primas' AND xtype='U')
 CREATE TABLE materias_primas (
@@ -87,34 +84,32 @@ CREATE TABLE materias_primas (
 )
 """)
 
-# Limpiar y preparar datos
-# Validación previa simple
-cursor.execute("""
-SELECT COUNT(*) FROM materias_primas WHERE Time_Stamp = ?
-""", row["Time_Stamp"])
-exists = cursor.fetchone()[0]
-
-if not exists:
+# Insertar datos solo si no existen
+for _, row in df.iterrows():
     cursor.execute("""
-        INSERT INTO materias_primas (
-            Partida, Solicitud, SP_Activo_Final, Valor_SP_Final,
-            PV_Final, MateriaPrima, Equipo, Local_Timestamp,
-            Time_Stamp, TimeStampDb
-        )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """,
-    safe_str(row["Partida"]),
-    safe_str(row["Solicitud"]),
-    safe_str(row["SP_Activo_Final"]),
-    safe_float(row["Valor_SP_Final"]),
-    safe_float(row["PV_Final"]),
-    safe_str(row["MateriaPrima"]),
-    safe_str(row["Equipo"]),
-    row["Local_Timestamp"] if pd.notna(row["Local_Timestamp"]) else None,
-    row["Time_Stamp"] if pd.notna(row["Time_Stamp"]) else None,
-    row["TimeStampDb"] if pd.notna(row["TimeStampDb"]) else None)
+        SELECT COUNT(*) FROM materias_primas WHERE Time_Stamp = ?
+    """, row["Time_Stamp"])
+    exists = cursor.fetchone()[0]
 
-
+    if not exists:
+        cursor.execute("""
+            INSERT INTO materias_primas (
+                Partida, Solicitud, SP_Activo_Final, Valor_SP_Final,
+                PV_Final, MateriaPrima, Equipo, Local_Timestamp,
+                Time_Stamp, TimeStampDb
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        safe_str(row["Partida"]),
+        safe_str(row["Solicitud"]),
+        safe_str(row["SP_Activo_Final"]),
+        safe_float(row["Valor_SP_Final"]),
+        safe_float(row["PV_Final"]),
+        safe_str(row["MateriaPrima"]),
+        safe_str(row["Equipo"]),
+        row["Local_Timestamp"] if pd.notna(row["Local_Timestamp"]) else None,
+        row["Time_Stamp"] if pd.notna(row["Time_Stamp"]) else None,
+        row["TimeStampDb"] if pd.notna(row["TimeStampDb"]) else None)
 
 conn.commit()
 cursor.close()
