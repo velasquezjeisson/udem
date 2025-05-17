@@ -54,21 +54,18 @@ df.set_index('Time_Stamp', inplace=True)
 
 # %%
 df_diario = df.resample('D').sum()
-
-# %%
-df_filtrado = df_diario[df_diario["PV_Final"] > 0]
-df_filtrado["PV_Final"].hist(bins=50, alpha=0.5, color='blue', edgecolor='black')
-plt.title('Histograma de PV_Final (filtrado)')
+df_filtrado = df_diario[df_diario["PV_Final"] > 0][["PV_Final"]]  # <-- solo PV_Final
 
 # %%
 retardo = 10
-for i in range(1, retardo+1):
-    df_filtrado['PV_Final-'+str(i)] = df_filtrado['PV_Final'].shift(i)
+for i in range(1, retardo + 1):
+    df_filtrado[f"PV_Final-{i}"] = df_filtrado["PV_Final"].shift(i)
 df_filtrado.dropna(inplace=True)
 
 # %%
-X = df_filtrado.drop('PV_Final', axis=1)
-y = df_filtrado['PV_Final']
+X = df_filtrado.drop("PV_Final", axis=1)
+y = df_filtrado["PV_Final"]
+
 X_train = X.iloc[:-30]
 X_test = X.iloc[-30:]
 y_train = y.iloc[:-30]
@@ -82,7 +79,6 @@ X_test_log = np.log1p(X_test)
 
 # %%
 from sklearn.metrics import mean_absolute_percentage_error, make_scorer
-
 mape_scorer = make_scorer(mean_absolute_percentage_error, greater_is_better=False)
 
 # %%
@@ -123,9 +119,14 @@ y_pred_gb = np.expm1(y_pred_gb_log)
 mape_test_gb = mean_absolute_percentage_error(np.expm1(y_test_log), y_pred_gb)
 print(f"MAPE real en prueba (escala original): {mape_test_gb * 100:.2f}%")
 
+# Debug: verificar compatibilidad con el API
+best_model = model_gb.best_estimator_
+print("✅ Modelo entrenado con", best_model.n_features_in_, "features.")
+print("✅ Nombres de features:", best_model.feature_names_in_)
+
 # %%
 import joblib
-joblib.dump(model_gb.best_estimator_, "modelo_gb.pkl")
+joblib.dump(best_model, "modelo_gb.pkl")
 
 # %%
 from dotenv import load_dotenv
