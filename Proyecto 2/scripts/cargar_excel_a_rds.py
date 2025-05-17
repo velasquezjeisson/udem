@@ -98,10 +98,18 @@ for _, row in df.iterrows():
             Time_Stamp, TimeStampDb
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    """, 
-    row["Partida"], row["Solicitud"], row["SP_Activo_Final"], row["Valor_SP_Final"],
-    row["PV_Final"], row["MateriaPrima"], row["Equipo"],
-    row["Local_Timestamp"], row["Time_Stamp"], row["TimeStampDb"])
+    """,
+    row["Partida"],
+    row["Solicitud"],
+    float(row["SP_Activo_Final"]) if pd.notna(row["SP_Activo_Final"]) else None,
+    float(row["Valor_SP_Final"]) if pd.notna(row["Valor_SP_Final"]) else None,
+    float(row["PV_Final"]) if pd.notna(row["PV_Final"]) else None,
+    row["MateriaPrima"],
+    row["Equipo"],
+    row["Local_Timestamp"],
+    row["Time_Stamp"],
+    row["TimeStampDb"])
+
 
 
 conn.commit()
