@@ -7,3 +7,4 @@ Proyecto 2/infrastructure/dev.tfvars
 *.tfvars
 /Proyecto 2/infrastructure/dev.tfvars
 dev.tfvars
+*.tfstate
