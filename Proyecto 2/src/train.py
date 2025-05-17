@@ -28,6 +28,8 @@ watchtower.CloudWatchLogHandler(
     log_group=log_group,
     stream_name=log_stream
 )
+logger.info("✅ Logger CloudWatch inicializado correctamente")
+
 
 
 

@@ -25,7 +25,7 @@ data "aws_iam_policy_document" "combined_policy" {
       "s3:ListBucket",
       "rds:DescribeDBInstances"
     ]
-     resources = ["*"]
+    resources = ["*"]
   }
 
   statement {
@@ -62,7 +62,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
   role = aws_iam_role.ec2_s3_role.name
 }
 
-# Política adicional para permitir lectura de secretos de Secrets Manager
+# Política para Secrets Manager
 resource "aws_iam_role_policy" "allow_read_sql_secret" {
   name = "AllowReadSqlSecret"
   role = aws_iam_role.ec2_s3_role.id
@@ -83,6 +83,7 @@ resource "aws_iam_role_policy" "allow_read_sql_secret" {
   depends_on = [aws_secretsmanager_secret.sql_credentials]
 }
 
+# ✅ Política adicional para CloudWatch Logs (completa)
 resource "aws_iam_role_policy" "allow_cloudwatch_logs" {
   name = "AllowCloudWatchLogs"
   role = aws_iam_role.ec2_s3_role.id
@@ -95,7 +96,8 @@ resource "aws_iam_role_policy" "allow_cloudwatch_logs" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogStreams"
         ],
         Resource = "*"
       }
