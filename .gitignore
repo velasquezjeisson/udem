@@ -8,3 +8,4 @@ Proyecto 2/infrastructure/dev.tfvars
 /Proyecto 2/infrastructure/dev.tfvars
 dev.tfvars
 *.tfstate
+terraform.tfstate.*
