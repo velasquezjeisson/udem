@@ -9,6 +9,12 @@ def get_db_credentials(secret_name="proyecto2/sqlserver-v2", region="us-east-1")
     secret = client.get_secret_value(SecretId=secret_name)
     return json.loads(secret["SecretString"])
 
+def safe_float(value):
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
 # --- Cargar credenciales desde Secrets Manager ---
 creds = get_db_credentials()
 DB_USER = creds["username"]
@@ -16,14 +22,14 @@ DB_PASSWORD = creds["password"]
 DB_NAME = "proyectodb"
 REGION = "us-east-1"
 
-# --- Obtener endpoint de la primera instancia RDS disponible ---
+# --- Obtener endpoint de RDS ---
 rds = boto3.client('rds', region_name=REGION)
 response = rds.describe_db_instances()
 endpoint = response['DBInstances'][0]['Endpoint']['Address']
 
 print(f"✅ Endpoint de RDS obtenido: {endpoint}")
 
-# --- Conectarse a base 'master' para crear base de datos ---
+# --- Crear base de datos si no existe ---
 conn_master = pyodbc.connect(
     f"DRIVER={{ODBC Driver 17 for SQL Server}};"
     f"SERVER={endpoint},1433;"
@@ -33,7 +39,6 @@ conn_master = pyodbc.connect(
 )
 conn_master.autocommit = True
 cursor_master = conn_master.cursor()
-
 cursor_master.execute(f"""
 IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = '{DB_NAME}')
 BEGIN
@@ -44,7 +49,7 @@ cursor_master.close()
 conn_master.close()
 print(f"✅ Base de datos '{DB_NAME}' verificada o creada.")
 
-# --- Leer el Excel directamente desde el proyecto local ---
+# --- Leer archivo Excel local ---
 excel_path = "/home/ec2-user/udem/Proyecto 2/MateriasPrimasConsolidado.xlsx"
 df = pd.read_excel(excel_path)
 
@@ -58,13 +63,13 @@ conn = pyodbc.connect(
 )
 cursor = conn.cursor()
 
-# Eliminar tabla si existe
+# Eliminar tabla si ya existe
 cursor.execute("""
 IF OBJECT_ID('materias_primas', 'U') IS NOT NULL
 DROP TABLE materias_primas;
 """)
 
-# Crear tabla con el modelo correcto
+# Crear tabla con estructura completa
 cursor.execute("""
 CREATE TABLE materias_primas (
     Id INT IDENTITY(1,1) PRIMARY KEY,
@@ -94,8 +99,8 @@ for _, row in df.iterrows():
     row["Partida"],
     row["Solicitud"],
     row["SP_Activo_Final"] if pd.notna(row["SP_Activo_Final"]) else None,
-    float(row["Valor_SP_Final"]) if pd.notna(row["Valor_SP_Final"]) else None,
-    float(row["PV_Final"]) if pd.notna(row["PV_Final"]) else None,
+    safe_float(row["Valor_SP_Final"]),
+    safe_float(row["PV_Final"]),
     row["MateriaPrima"],
     row["Equipo"],
     row["Local_Timestamp"],
