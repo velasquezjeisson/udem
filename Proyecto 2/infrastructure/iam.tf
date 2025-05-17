@@ -82,3 +82,23 @@ resource "aws_iam_role_policy" "allow_read_sql_secret" {
 
   depends_on = [aws_secretsmanager_secret.sql_credentials]
 }
+
+resource "aws_iam_role_policy" "allow_cloudwatch_logs" {
+  name = "AllowCloudWatchLogs"
+  role = aws_iam_role.ec2_s3_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
