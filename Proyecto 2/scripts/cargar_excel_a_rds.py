@@ -67,14 +67,11 @@ conn = pyodbc.connect(
 )
 cursor = conn.cursor()
 
-# Eliminar tabla si ya existe
-cursor.execute("""
-IF OBJECT_ID('materias_primas', 'U') IS NOT NULL
-DROP TABLE materias_primas;
-""")
+
 
 # Crear tabla con estructura completa
 cursor.execute("""
+IF NOT EXISTS (SELECT * FROM sysobjects WHERE name='materias_primas' AND xtype='U')
 CREATE TABLE materias_primas (
     Id INT IDENTITY(1,1) PRIMARY KEY,
     Partida NVARCHAR(50),
@@ -90,8 +87,14 @@ CREATE TABLE materias_primas (
 )
 """)
 
-# Insertar datos de Excel
-for _, row in df.iterrows():
+# Limpiar y preparar datos
+# Validación previa simple
+cursor.execute("""
+SELECT COUNT(*) FROM materias_primas WHERE Time_Stamp = ?
+""", row["Time_Stamp"])
+exists = cursor.fetchone()[0]
+
+if not exists:
     cursor.execute("""
         INSERT INTO materias_primas (
             Partida, Solicitud, SP_Activo_Final, Valor_SP_Final,
@@ -110,6 +113,7 @@ for _, row in df.iterrows():
     row["Local_Timestamp"] if pd.notna(row["Local_Timestamp"]) else None,
     row["Time_Stamp"] if pd.notna(row["Time_Stamp"]) else None,
     row["TimeStampDb"] if pd.notna(row["TimeStampDb"]) else None)
+
 
 
 conn.commit()
