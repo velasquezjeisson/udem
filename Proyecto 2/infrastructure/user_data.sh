@@ -26,6 +26,7 @@ fi
 
 # Entrar al proyecto (donde está pyproject.toml)
 cd "/home/ec2-user/udem/Proyecto 2"
+export AWS_DEFAULT_REGION=us-east-1
 
 # Crear entorno virtual y sincronizar dependencias
 uv venv
